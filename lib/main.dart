@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'graph/graph_controller.dart';
-import 'screens/home_screen.dart';
+import 'screens/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -128,7 +128,7 @@ class MyApp extends StatelessWidget {
                 ),
               ),
             ),
-            home: const HomeScreen(),
+            home: const SplashScreen(),
           );
         },
       ),

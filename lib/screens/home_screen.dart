@@ -7,6 +7,7 @@ import '../models/genre.dart';
 import '../graph/graph_controller.dart';
 import '../utils/adjacency_matrix.dart';
 import '../widgets/graph_widget.dart';
+import '../widgets/example_sandbox_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -643,6 +644,730 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _openTheorySheet(BuildContext context, GraphController controller) {
+    final bool isDark = controller.isDarkMode;
+    final primaryColor = isDark ? const Color(0xFF00E5FF) : const Color(0xFF0288D1);
+    final secondaryColor = isDark ? const Color(0xFFBD00FF) : const Color(0xFF7B1FA2);
+    final accentColor = isDark ? const Color(0xFFFFD700) : const Color(0xFFE65100);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF111422) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 15,
+                spreadRadius: 2,
+              )
+            ],
+          ),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Pull indicator
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Icon(Icons.school, color: accentColor, size: 24),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Fundamentos y Teoría del Grafo',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: DefaultTabController(
+                  length: 4,
+                  child: Column(
+                    children: [
+                      TabBar(
+                        indicatorColor: accentColor,
+                        labelColor: isDark ? Colors.white : Colors.black87,
+                        unselectedLabelColor: Colors.grey,
+                        labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+                        tabs: const [
+                          Tab(text: '⚡ Algor.', icon: Icon(Icons.bolt, size: 16)),
+                          Tab(text: '📊 Estruct.', icon: Icon(Icons.hub, size: 16)),
+                          Tab(text: '🛡️ Valida.', icon: Icon(Icons.security, size: 16)),
+                          Tab(text: '💡 Ejempl.', icon: Icon(Icons.psychology, size: 16)),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Expanded(
+                        child: TabBarView(
+                          children: [
+                            // Tab 1: BFS & DFS
+                            _buildTheoryAlgorithmsTab(isDark, primaryColor, secondaryColor, accentColor),
+                            // Tab 2: Representation (Adjacency Matrix vs List)
+                            _buildTheoryRepresentationsTab(isDark, primaryColor, secondaryColor),
+                            // Tab 3: Validations & Restrictions
+                            _buildTheoryValidationsTab(isDark, primaryColor, secondaryColor, accentColor),
+                            // Tab 4: Predesigned Examples
+                            _buildTheoryExamplesTab(context, isDark, controller, accentColor),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTheoryAlgorithmsTab(bool isDark, Color primary, Color secondary, Color accent) {
+    final cardBg = isDark ? const Color(0xFF1B2236) : const Color(0xFFE8EDF5);
+    final textStyle = TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13, height: 1.4);
+    
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // BFS Section
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: primary.withOpacity(0.3), width: 1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.compare_arrows, color: primary, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Búsqueda en Anchura (BFS)',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 20),
+                Text(
+                  '• Funcionamiento Computacional:\nUtiliza una estructura de datos tipo Cola (FIFO - First In, First Out). Explora nivel por nivel, visitando todos los vecinos inmediatos del nodo actual antes de pasar a los del siguiente nivel. Es el algoritmo óptimo para encontrar caminos mínimos en grafos sin pesos.',
+                  style: textStyle,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '• Fundamento Matemático:\n- Complejidad Temporal: O(V + E), donde V es la cantidad de Vértices (nodos) y E es la cantidad de Aristas (conexiones).\n- Complejidad Espacial: O(V) para registrar los nodos en cola y el conjunto de visitados.',
+                  style: textStyle,
+                ),
+              ],
+            ),
+          ),
+          // DFS Section
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: secondary.withOpacity(0.3), width: 1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.search, color: secondary, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Búsqueda en Profundidad (DFS)',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 20),
+                Text(
+                  '• Funcionamiento Computacional:\nUtiliza una estructura de datos tipo Pila (LIFO - Last In, First Out), típicamente implementada mediante recursividad. Explora lo más profundo posible a lo largo de cada rama antes de retroceder (backtracking) para explorar otros caminos alternos. Es ideal para verificar conectividad, detectar ciclos y ordenamiento topológico.',
+                  style: textStyle,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '• Fundamento Matemático:\n- Complejidad Temporal: O(V + E), ya que en el peor caso visita cada vértice y arista una única vez.\n- Complejidad Espacial: O(V) en el peor caso debido a la pila de recursión del sistema.',
+                  style: textStyle,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTheoryRepresentationsTab(bool isDark, Color primary, Color secondary) {
+    final cardBg = isDark ? const Color(0xFF1B2236) : const Color(0xFFE8EDF5);
+    final textStyle = TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13, height: 1.4);
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'En MusicGraph AI, los datos del grafo musical se representan internamente de forma dual para maximizar tanto la eficiencia computacional como la claridad visual:',
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.w600,
+              fontSize: 13.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Adjacency List Card
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: primary.withOpacity(0.3), width: 1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.list, color: primary, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Lista de Adyacencia (Interna)',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 20),
+                Text(
+                  '• Definición: Representa el grafo mediante un mapa clave-valor donde cada clave es un nodo y su valor es una lista de nodos vecinos.\n\n• Eficiencia: O(V + E) en almacenamiento de memoria. Es sumamente óptima para grafos dispersos (como las relaciones de artistas y géneros) y permite iterar de forma veloz sobre los vecinos inmediatos durante BFS y DFS.',
+                  style: textStyle,
+                ),
+              ],
+            ),
+          ),
+          // Adjacency Matrix Card
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: secondary.withOpacity(0.3), width: 1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.grid_on, color: secondary, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Matriz de Adyacencia (Visual y Matemática)',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 20),
+                Text(
+                  '• Definición: Una matriz bidimensional N x N donde el valor en la celda [i][j] es 1 si existe una arista del nodo i al nodo j, y 0 en caso contrario.\n\n• Aplicación en la App: Se calcula dinámicamente para representarse en la sección "Matemática", brindando al usuario un panel matemático interactivo y comprensible del mapa total de adyacencias.',
+                  style: textStyle,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Identificación Visual de los Vértices (Nodos)',
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Artist Node Preview
+          _buildNodeLegendItem(
+            isDark: isDark,
+            title: 'Artista (Vértice)',
+            color: isDark ? const Color(0xFF00E5FF) : const Color(0xFF0288D1),
+            icon: Icons.mic,
+            description: 'Representa a cantantes y creadores. En el lienzo se dibuja en azul con un micrófono en el centro.',
+          ),
+          // Song Node Preview
+          _buildNodeLegendItem(
+            isDark: isDark,
+            title: 'Canción (Vértice)',
+            color: isDark ? const Color(0xFF00FF87) : const Color(0xFF2E7D32),
+            icon: Icons.music_note,
+            description: 'Representa los sencillos o temas musicales. Se dibuja de color verde con una nota musical central.',
+          ),
+          // Genre Node Preview
+          _buildNodeLegendItem(
+            isDark: isDark,
+            title: 'Género (Vértice)',
+            color: isDark ? const Color(0xFFBD00FF) : const Color(0xFF7B1FA2),
+            icon: Icons.queue_music,
+            description: 'Representa agrupaciones de estilos musicales. Se renderiza en color morado con un ícono de lista.',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTheoryValidationsTab(bool isDark, Color primary, Color secondary, Color accent) {
+    final cardBg = isDark ? const Color(0xFF1B2236) : const Color(0xFFE8EDF5);
+    final textStyle = TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13, height: 1.4);
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Validation rules
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: primary.withOpacity(0.3), width: 1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.verified_user, color: primary, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Validación de Conexiones',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 20),
+                Text(
+                  'Para asegurar la integridad matemática del grafo, el sistema aplica las siguientes reglas de validación en tiempo real:\n\n'
+                  '1. Evitar Auto-bucles (Self-loops): No se permite conectar un nodo consigo mismo (ej. Karol G conectada a Karol G). El sistema verifica que el nodo de origen sea diferente al de destino.\n\n'
+                  '2. Evitar Multigrafos (Arcos paralelos redundantes): Si la conexión ya existe en el sentido actual del grafo, el controlador descarta la nueva inserción, manteniendo el grafo simple.',
+                  style: textStyle,
+                ),
+              ],
+            ),
+          ),
+          // Restrictions
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: secondary.withOpacity(0.3), width: 1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.settings_input_component, color: secondary, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Restricciones por Direccionalidad',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 20),
+                Text(
+                  'El usuario puede alternar la direccionalidad del grafo musical de manera global, aplicando restricciones específicas en los algoritmos y la matriz de adyacencia:\n\n'
+                  '• Grafo Dirigido (Flecha unidireccional):\n'
+                  '- Las conexiones son de un solo sentido (A → B no implica B → A).\n'
+                  '- La Matriz de Adyacencia resultante es típicamente asimétrica.\n'
+                  '- Los recorridos BFS/DFS respetan estrictamente el sentido del arco.\n\n'
+                  '• Grafo No Dirigido (Línea bidireccional):\n'
+                  '- Las conexiones son simétricas y de doble sentido (A ↔ B).\n'
+                  '- La Matriz de Adyacencia es estrictamente simétrica respecto a su diagonal principal (A = A^T).\n'
+                  '- Al insertar una conexión, el controlador la propaga internamente agregando la arista simétrica en la lista de adyacencia.',
+                  style: textStyle,
+                ),
+              ],
+            ),
+          ),
+          // UX & Visual Representation
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: accent.withOpacity(0.3), width: 1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.remove_red_eye, color: accent, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Guía Visual de Recorridos (UX)',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 20),
+                Text(
+                  'Durante la simulación de algoritmos, los estados de los nodos se renderizan con animaciones y halos de luz diferenciados:\n\n'
+                  '• Estado Normal (Apagado): El nodo conserva su color temático (Celeste para Artista, Verde para Canción, Morado para Género).\n\n'
+                  '• Estado Activo (Escaneo - Rosa Neón): Indica el nodo exacto que la cabeza del algoritmo está analizando en ese microsegundo.\n\n'
+                  '• Estado Visitado (Brillo Coloreado): El nodo ya fue procesado y su vecindad fue agregada a la cola o pila.\n\n'
+                  '• Estado en Camino Mínimo (Oro/Amarillo): Representa los nodos que conforman el camino final resultante.',
+                  style: textStyle,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTheoryExamplesTab(BuildContext context, bool isDark, GraphController controller, Color accentColor) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Toca un ejemplo para cargarlo y ver cómo cambia el análisis automático en el lienzo.',
+            style: TextStyle(
+              color: isDark ? Colors.white70 : Colors.black54,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildExampleCard(
+            context: context,
+            isDark: isDark,
+            controller: controller,
+            type: 'chain',
+            title: 'Cadena básica',
+            description: 'Cinco nodos en línea para entender recorridos y extremos.',
+            tag: 'Principiante',
+            tagColor: Colors.teal,
+            icon: Icons.link,
+          ),
+          _buildExampleCard(
+            context: context,
+            isDark: isDark,
+            controller: controller,
+            type: 'cycle',
+            title: 'Ciclo simple',
+            description: 'Seis vértices formando un anillo cerrado y fácil de seguir.',
+            tag: 'Principiante',
+            tagColor: Colors.teal,
+            icon: Icons.loop,
+          ),
+          _buildExampleCard(
+            context: context,
+            isDark: isDark,
+            controller: controller,
+            type: 'star',
+            title: 'Estrella',
+            description: 'Un nodo central con cinco hojas para ver grados y conectividad.',
+            tag: 'Intermedio',
+            tagColor: Colors.orange,
+            icon: Icons.star_border,
+          ),
+          _buildExampleCard(
+            context: context,
+            isDark: isDark,
+            controller: controller,
+            type: 'tree',
+            title: 'Árbol binario',
+            description: 'Estructura jerárquica sin ciclos para practicar ramas.',
+            tag: 'Intermedio',
+            tagColor: Colors.orange,
+            icon: Icons.account_tree_outlined,
+          ),
+          _buildExampleCard(
+            context: context,
+            isDark: isDark,
+            controller: controller,
+            type: 'disconnected',
+            title: 'Grafo desconexo',
+            description: 'Dos grupos separados para ver cómo el sistema detecta componentes.',
+            tag: 'Intermedio',
+            tagColor: Colors.orange,
+            icon: Icons.flash_on_outlined,
+          ),
+          _buildExampleCard(
+            context: context,
+            isDark: isDark,
+            controller: controller,
+            type: 'complete',
+            title: 'Grafo completo K5',
+            description: 'Todos los nodos conectados entre sí para comparar densidad.',
+            tag: 'Avanzado',
+            tagColor: Colors.redAccent,
+            icon: Icons.grid_view,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExampleCard({
+    required BuildContext context,
+    required bool isDark,
+    required GraphController controller,
+    required String type,
+    required String title,
+    required String description,
+    required String tag,
+    required Color tagColor,
+    required IconData icon,
+  }) {
+    final cardBg = isDark ? const Color(0xFF1B2236) : const Color(0xFFE8EDF5);
+    final primaryColor = isDark ? const Color(0xFF00E5FF) : const Color(0xFF0288D1);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: primaryColor.withOpacity(0.1), width: 1),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            // Dismiss the theory sheet first so sandbox displays clean
+            Navigator.pop(context);
+            
+            // Show scale-animated sandbox dialog for safe interactive previewing
+            showGeneralDialog(
+              context: context,
+              barrierDismissible: true,
+              barrierLabel: 'Sandbox',
+              barrierColor: Colors.black.withOpacity(0.65),
+              transitionDuration: const Duration(milliseconds: 350),
+              pageBuilder: (dialogCtx, anim1, anim2) {
+                return ExampleSandboxDialog(
+                  exampleType: type,
+                  title: title,
+                  icon: icon,
+                  mainController: controller,
+                );
+              },
+              transitionBuilder: (dialogCtx, anim1, anim2, child) {
+                final curve = CurvedAnimation(parent: anim1, curve: Curves.easeOutBack);
+                return ScaleTransition(
+                  scale: curve,
+                  child: FadeTransition(
+                    opacity: anim1,
+                    child: child,
+                  ),
+                );
+              },
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                // Nice Left Icon Circle
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: primaryColor.withOpacity(0.08),
+                  ),
+                  child: Icon(icon, color: primaryColor, size: 22),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            title,
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black87,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Dynamic tag
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: tagColor.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              tag,
+                              style: TextStyle(
+                                color: tagColor,
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        description,
+                        style: TextStyle(
+                          color: isDark ? Colors.white60 : Colors.black54,
+                          fontSize: 12,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: isDark ? Colors.white30 : Colors.black26,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNodeLegendItem({
+    required bool isDark,
+    required String title,
+    required Color color,
+    required IconData icon,
+    required String description,
+  }) {
+    final cardBg = isDark ? const Color(0xFF1B2236) : const Color(0xFFE8EDF5);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.2), width: 1),
+      ),
+      child: Row(
+        children: [
+          // Simulated premium glowing node
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isDark ? const Color(0xFF111422) : Colors.white,
+              border: Border.all(color: color, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.3),
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                )
+              ],
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: TextStyle(
+                    color: isDark ? Colors.white60 : Colors.black54,
+                    fontSize: 12,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // --- Main Build Method ---
 
   @override
@@ -726,6 +1451,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             controller.toggleTheme();
                           },
                         ),
+                        // Theory button (moved next to mode switch!)
+                        IconButton(
+                          icon: Icon(
+                            Icons.school,
+                            color: isDark ? const Color(0xFFFFD700) : const Color(0xFFE65100),
+                          ),
+                          tooltip: 'Teoría y Ejemplos',
+                          onPressed: () => _openTheorySheet(context, controller),
+                        ),
+                        const SizedBox(width: 6),
                         // Refresh Preloaded Button
                         IconButton(
                           icon: const Icon(Icons.refresh, color: Color(0xFF00FF87)),
@@ -739,6 +1474,36 @@ class _HomeScreenState extends State<HomeScreen> {
                               _algoTarget = null;
                               _inspectingNode = null;
                             });
+                          },
+                        ),
+                        // Clear canvas button
+                        IconButton(
+                          icon: const Icon(Icons.delete_sweep, color: Colors.redAccent),
+                          tooltip: 'Limpiar Lienzo',
+                          onPressed: () {
+                            controller.clearGraph();
+                            setState(() {
+                              _connectionSource = null;
+                              _connectionTarget = null;
+                              _algoStart = null;
+                              _algoTarget = null;
+                              _inspectingNode = null;
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Row(
+                                  children: [
+                                    Icon(Icons.delete_sweep, color: Colors.white, size: 20),
+                                    const SizedBox(width: 8),
+                                    Text('Lienzo limpiado por completo'),
+                                  ],
+                                ),
+                                backgroundColor: Colors.redAccent,
+                                duration: const Duration(seconds: 2),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            );
                           },
                         ),
                         // Direct Config Toggle: Grafo Dirigido
@@ -1033,27 +1798,15 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color color,
     required VoidCallback onPressed,
   }) {
-    return InkWell(
+    return GestureDetector(
       onTap: onPressed,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w800,
-                fontSize: 10,
-                letterSpacing: 0.2,
-              ),
-            ),
-          ],
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+        ],
       ),
     );
   }

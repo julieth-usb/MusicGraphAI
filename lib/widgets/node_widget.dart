@@ -17,22 +17,30 @@ class NodeWidget extends StatelessWidget {
     this.onTap,
   });
 
+  bool _isExampleNode() {
+    return node.id.startsWith('chain_') ||
+        node.id.startsWith('cycle_') ||
+        node.id.startsWith('star_') ||
+        node.id.startsWith('tree_') ||
+        node.id.startsWith('disc_') ||
+        node.id.startsWith('k5_');
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    // Determine theme-aligned glowing colors
+
     Color glowColor = node.getColor(isDark);
     double glowStrength = 8.0;
     double borderThickness = 1.5;
     List<BoxShadow> shadows = [];
 
     if (isInPath) {
-      glowColor = const Color(0xFFFFD700); // Golden yellow for final shortest path
+      glowColor = const Color(0xFFFFD700); // Golden yellow
       glowStrength = 22.0;
       borderThickness = 3.0;
     } else if (isActive) {
-      glowColor = const Color(0xFFFF007F); // Glowing Hot Pink for active traversal scanning
+      glowColor = const Color(0xFFFF007F); // Glowing Pink
       glowStrength = 26.0;
       borderThickness = 3.5;
     } else if (isVisited) {
@@ -41,7 +49,6 @@ class NodeWidget extends StatelessWidget {
       borderThickness = 2.0;
     }
 
-    // Add high fidelity neon shadow glow effect
     if (isActive || isVisited || isInPath) {
       shadows = [
         BoxShadow(
@@ -56,7 +63,6 @@ class NodeWidget extends StatelessWidget {
         ),
       ];
     } else {
-      // Subtle standard ambient glow
       shadows = [
         BoxShadow(
           color: isDark ? Colors.black.withOpacity(0.5) : Colors.grey.withOpacity(0.2),
@@ -66,16 +72,62 @@ class NodeWidget extends StatelessWidget {
       ];
     }
 
+    // --- IF IT IS AN EXAMPLE, RENDER THE BLUE CIRCLE ---
+    if (_isExampleNode()) {
+      return GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          constraints: const BoxConstraints(
+            minWidth: 54,
+            minHeight: 54,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: BoxDecoration(
+            color: isActive
+                ? const Color(0xFFFF007F)
+                : (isVisited ? const Color(0xFF6366F1) : const Color(0xFF3B82F6)),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: isInPath ? const Color(0xFFFFD700) : Colors.white,
+              width: isInPath ? 3.0 : 2.0,
+            ),
+            boxShadow: shadows,
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            node.name,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 18.0,
+              letterSpacing: 0.5,
+              shadows: (isActive || isInPath)
+                  ? [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.5),
+                        blurRadius: 4,
+                      ),
+                    ]
+                  : null,
+            ),
+          ),
+        ),
+      );
+    }
+
+    // --- OTHERWISE, RENDER THE GORGEOUS MUSIC CARD ---
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
         decoration: BoxDecoration(
-          // Futuristic glassmorphic background
-          color: isDark 
-              ? const Color(0xFF1E1E2F).withOpacity(0.85) 
+          color: isDark
+              ? const Color(0xFF1E1E2F).withOpacity(0.85)
               : Colors.white.withOpacity(0.95),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
@@ -87,10 +139,9 @@ class NodeWidget extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Circular Glowing Icon
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: glowColor.withOpacity(0.15),
                 shape: BoxShape.circle,
@@ -102,11 +153,10 @@ class NodeWidget extends StatelessWidget {
               child: Icon(
                 node.icon,
                 color: glowColor,
-                size: 16,
+                size: 18,
               ),
             ),
-            const SizedBox(width: 10),
-            // Title & Subtitle
+            const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -116,7 +166,7 @@ class NodeWidget extends StatelessWidget {
                   style: TextStyle(
                     color: isDark ? Colors.white : Colors.black87,
                     fontWeight: FontWeight.bold,
-                    fontSize: 13.5,
+                    fontSize: 15.0,
                     letterSpacing: 0.5,
                     shadows: (isActive || isInPath)
                         ? [
@@ -128,12 +178,12 @@ class NodeWidget extends StatelessWidget {
                         : null,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   node.subtitle ?? node.typeString,
                   style: TextStyle(
                     color: isDark ? Colors.white.withOpacity(0.6) : Colors.black54,
-                    fontSize: 10,
+                    fontSize: 11.0,
                     letterSpacing: 0.2,
                   ),
                 ),

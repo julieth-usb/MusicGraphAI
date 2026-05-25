@@ -147,6 +147,7 @@ class GraphController extends ChangeNotifier {
 
   void _rebuildGraphView() {
     graph.nodes.clear();
+    graph.edges.clear();
     // Using a set to ensure no duplicate edges in GraphView
     final Set<String> addedEdges = {};
 
@@ -235,7 +236,172 @@ class GraphController extends ChangeNotifier {
     _customNodes.clear();
     _customEdges.clear();
     _nodeMap.clear();
-    graph.nodes.clear();
+    graph.edges.clear();
+    _rebuildGraphView();
+    notifyListeners();
+  }
+
+  void removeAllNodesAndEdges() {
+    _nodes.clear();
+    _edges.clear();
+    _rebuildGraphView();
+    notifyListeners();
+  }
+
+  void loadExampleGraph(String exampleType, {bool clearCurrent = true}) {
+    stopAnimation();
+    
+    final List<MusicNode> tempNodes = [];
+    final List<MapEntry<MusicNode, MusicNode>> tempEdges = [];
+
+    switch (exampleType) {
+      case 'chain':
+        // Cadena básica: 5 nodes in a line
+        final c1 = Song(id: 'chain_1', name: 'A');
+        final c2 = Song(id: 'chain_2', name: 'B');
+        final c3 = Song(id: 'chain_3', name: 'C');
+        final c4 = Song(id: 'chain_4', name: 'D');
+        final c5 = Song(id: 'chain_5', name: 'E');
+
+        tempNodes.addAll([c1, c2, c3, c4, c5]);
+        tempEdges.add(MapEntry(c1, c2));
+        tempEdges.add(MapEntry(c2, c3));
+        tempEdges.add(MapEntry(c3, c4));
+        tempEdges.add(MapEntry(c4, c5));
+        break;
+
+      case 'cycle':
+        // Ciclo simple: 6 nodes in a ring
+        final cy1 = Song(id: 'cycle_1', name: 'A');
+        final cy2 = Song(id: 'cycle_2', name: 'B');
+        final cy3 = Song(id: 'cycle_3', name: 'C');
+        final cy4 = Song(id: 'cycle_4', name: 'D');
+        final cy5 = Song(id: 'cycle_5', name: 'E');
+        final cy6 = Song(id: 'cycle_6', name: 'F');
+
+        tempNodes.addAll([cy1, cy2, cy3, cy4, cy5, cy6]);
+        tempEdges.add(MapEntry(cy1, cy2));
+        tempEdges.add(MapEntry(cy2, cy3));
+        tempEdges.add(MapEntry(cy3, cy4));
+        tempEdges.add(MapEntry(cy4, cy5));
+        tempEdges.add(MapEntry(cy5, cy6));
+        tempEdges.add(MapEntry(cy6, cy1));
+        break;
+
+      case 'star':
+        // Estrella: central node with 5 leaves
+        final sCtr = Artist(id: 'star_center', name: 'Centro');
+        final s1 = Song(id: 'star_1', name: 'A');
+        final s2 = Song(id: 'star_2', name: 'B');
+        final s3 = Song(id: 'star_3', name: 'C');
+        final s4 = Song(id: 'star_4', name: 'D');
+        final s5 = Song(id: 'star_5', name: 'E');
+
+        tempNodes.addAll([sCtr, s1, s2, s3, s4, s5]);
+        tempEdges.add(MapEntry(sCtr, s1));
+        tempEdges.add(MapEntry(sCtr, s2));
+        tempEdges.add(MapEntry(sCtr, s3));
+        tempEdges.add(MapEntry(sCtr, s4));
+        tempEdges.add(MapEntry(sCtr, s5));
+        break;
+
+      case 'tree':
+        // Árbol binario: root with 2 children, each with 2 children
+        final tRoot = Genre(id: 'tree_root', name: 'Raíz');
+        final tL = Genre(id: 'tree_l', name: 'A');
+        final tR = Genre(id: 'tree_r', name: 'B');
+        final tLl = Artist(id: 'tree_ll', name: 'A1');
+        final tLr = Artist(id: 'tree_lr', name: 'A2');
+        final tRl = Artist(id: 'tree_rl', name: 'B1');
+        final tRr = Artist(id: 'tree_rr', name: 'B2');
+
+        tempNodes.addAll([tRoot, tL, tR, tLl, tLr, tRl, tRr]);
+        tempEdges.add(MapEntry(tRoot, tL));
+        tempEdges.add(MapEntry(tRoot, tR));
+        tempEdges.add(MapEntry(tL, tLl));
+        tempEdges.add(MapEntry(tL, tLr));
+        tempEdges.add(MapEntry(tR, tRl));
+        tempEdges.add(MapEntry(tR, tRr));
+        break;
+
+      case 'disconnected':
+        // Grafo desconexo: Group 1 (3 nodes) and Group 2 (2 nodes)
+        final d1 = Song(id: 'disc_1', name: 'A');
+        final d2 = Song(id: 'disc_2', name: 'B');
+        final d3 = Song(id: 'disc_3', name: 'C');
+        final x1 = Artist(id: 'disc_x', name: 'X');
+        final y1 = Artist(id: 'disc_y', name: 'Y');
+
+        tempNodes.addAll([d1, d2, d3, x1, y1]);
+        tempEdges.add(MapEntry(d1, d2));
+        tempEdges.add(MapEntry(d2, d3));
+        tempEdges.add(MapEntry(x1, y1));
+        break;
+
+      case 'complete':
+        // Grafo completo K5: 5 nodes all connected to each other
+        final k1 = Genre(id: 'k5_1', name: 'A');
+        final k2 = Genre(id: 'k5_2', name: 'B');
+        final k3 = Genre(id: 'k5_3', name: 'C');
+        final k4 = Genre(id: 'k5_4', name: 'D');
+        final k5 = Genre(id: 'k5_5', name: 'E');
+
+        tempNodes.addAll([k1, k2, k3, k4, k5]);
+        // All combinations of 5 nodes:
+        tempEdges.add(MapEntry(k1, k2));
+        tempEdges.add(MapEntry(k1, k3));
+        tempEdges.add(MapEntry(k1, k4));
+        tempEdges.add(MapEntry(k1, k5));
+
+        tempEdges.add(MapEntry(k2, k3));
+        tempEdges.add(MapEntry(k2, k4));
+        tempEdges.add(MapEntry(k2, k5));
+
+        tempEdges.add(MapEntry(k3, k4));
+        tempEdges.add(MapEntry(k3, k5));
+
+        tempEdges.add(MapEntry(k4, k5));
+        break;
+    }
+
+    if (clearCurrent) {
+      _nodes.clear();
+      _edges.clear();
+      _customNodes.clear();
+      _customEdges.clear();
+      _nodeMap.clear();
+      graph.nodes.clear();
+      
+      _nodes.addAll(tempNodes);
+      _edges.addAll(tempEdges);
+    } else {
+      // Safe merge logic to avoid duplicates
+      final Map<String, MusicNode> idMap = {for (var n in _nodes) n.id: n};
+      
+      MusicNode resolveNode(MusicNode node) {
+        if (idMap.containsKey(node.id)) {
+          return idMap[node.id]!;
+        } else {
+          _nodes.add(node);
+          idMap[node.id] = node;
+          return node;
+        }
+      }
+      
+      for (final edge in tempEdges) {
+        final src = resolveNode(edge.key);
+        final dst = resolveNode(edge.value);
+        
+        final edgeExists = _edges.any((e) =>
+            (e.key == src && e.value == dst) ||
+            (!_isDirected && e.key == dst && e.value == src));
+        if (!edgeExists) {
+          _edges.add(MapEntry(src, dst));
+        }
+      }
+    }
+
+    _rebuildGraphView();
     notifyListeners();
   }
 

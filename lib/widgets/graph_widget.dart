@@ -22,7 +22,12 @@ class _GraphWidgetState extends State<GraphWidget> {
   // We instantiate the algorithm configuration.
   // FruchtermanReingold is a force-directed layout which lets nodes auto-arrange.
   final FruchtermanReingoldAlgorithm _forceLayout = FruchtermanReingoldAlgorithm(
-    FruchtermanReingoldConfiguration(),
+    FruchtermanReingoldConfiguration()
+      ..iterations = 800
+      ..attractionRate = 50.0
+      ..repulsionRate = 250.0
+      ..attractionPercentage = 0.3
+      ..repulsionPercentage = 0.3,
   );
 
   @override
@@ -79,12 +84,21 @@ class _GraphWidgetState extends State<GraphWidget> {
             final bool isVisited = widget.controller.visitedNodes.contains(musicNode);
             final bool isInPath = widget.controller.shortestPathNodes.contains(musicNode);
 
-            return NodeWidget(
-              node: musicNode,
-              isActive: isActive,
-              isVisited: isVisited,
-              isInPath: isInPath,
-              onTap: () => widget.onNodeSelected(musicNode),
+            // Wrap with a GestureDetector to allow freeform dragging of individual nodes!
+            return GestureDetector(
+              onPanUpdate: (details) {
+                // Allows the user to freely drag nodes around the canvas
+                setState(() {
+                  node.position += details.delta;
+                });
+              },
+              child: NodeWidget(
+                node: musicNode,
+                isActive: isActive,
+                isVisited: isVisited,
+                isInPath: isInPath,
+                onTap: () => widget.onNodeSelected(musicNode),
+              ),
             );
           },
         ),
