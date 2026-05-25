@@ -1663,79 +1663,50 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-            // 5. Visual Bottom Menu matching the requested GraphMind style
+            // 5. Visual Floating Bottom Pill Menu (Creative cell phone control capsule!)
             Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
+              bottom: 16,
+              left: 20,
+              right: 20,
               child: Container(
-                padding: const EdgeInsets.only(top: 16, bottom: 20, left: 20, right: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF151828) : Colors.white,
+                  color: isDark ? const Color(0xFF151828).withOpacity(0.92) : Colors.white.withOpacity(0.95),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withOpacity(0.12) : Colors.grey.withOpacity(0.2),
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(isDark ? 0.4 : 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -4),
+                      color: Colors.black.withOpacity(0.25),
+                      blurRadius: 12,
+                      offset: const Offset(0, 5),
                     )
                   ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    // Loaded Graph Label
-                    Text(
-                      'Cargado: \${controller.loadedGraphName}',
-                      style: TextStyle(
-                        color: isDark ? Colors.white : Colors.black87,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
+                    // Button 1: Create
+                    _buildFloatingMenuButton(
+                      icon: Icons.dashboard_customize,
+                      label: 'Estructuras',
+                      color: isDark ? const Color(0xFF00FF87) : const Color(0xFF2E7D32),
+                      onPressed: () => _openStructuresSheet(context, controller),
                     ),
-                    const SizedBox(height: 16),
-                    // Action Buttons Row
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _buildModernButton(
-                            icon: Icons.palette,
-                            label: 'Colores',
-                            isDark: isDark,
-                            onPressed: () {
-                              controller.toggleTheme();
-                            },
-                          ),
-                          const SizedBox(width: 12),
-                          _buildModernButton(
-                            icon: Icons.delete_outline,
-                            label: 'Borrar',
-                            isDark: isDark,
-                            onPressed: () {
-                              _showWarningSnackBar('Selecciona un nodo para borrarlo.');
-                            },
-                          ),
-                          const SizedBox(width: 12),
-                          _buildModernButton(
-                            icon: Icons.cleaning_services,
-                            label: 'Limpiar',
-                            isDark: isDark,
-                            onPressed: () {
-                              controller.clearGraph();
-                              controller.loadedGraphName = 'Personalizado';
-                              _showSuccessSnackBar('Grafo limpiado.');
-                            },
-                          ),
-                          const SizedBox(width: 12),
-                          _buildModernButton(
-                            icon: Icons.rocket_launch,
-                            label: 'Algoritmos',
-                            isDark: isDark,
-                            onPressed: () => _openAlgorithmsSheet(context, controller),
-                          ),
-                        ],
-                      ),
+                    // Button 2: Run algorithms
+                    _buildFloatingMenuButton(
+                      icon: Icons.rocket_launch,
+                      label: 'Algoritmos',
+                      color: isDark ? const Color(0xFFFF007F) : const Color(0xFF7B1FA2),
+                      onPressed: () => _openAlgorithmsSheet(context, controller),
+                    ),
+                    // Button 3: Stats math
+                    _buildFloatingMenuButton(
+                      icon: Icons.bar_chart,
+                      label: 'Matemática',
+                      color: isDark ? const Color(0xFF00E5FF) : const Color(0xFF0288D1),
+                      onPressed: () => _openMathematicsSheet(context, controller),
                     ),
                   ],
                 ),
@@ -1821,36 +1792,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // --- Sub-widgets and internal UI helpers ---
 
-  Widget _buildModernButton({
+  Widget _buildFloatingMenuButton({
     required IconData icon,
     required String label,
-    required bool isDark,
+    required Color color,
     required VoidCallback onPressed,
   }) {
-    return InkWell(
+    return GestureDetector(
       onTap: onPressed,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1B2236) : const Color(0xFFF0F4F8),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 20, color: isDark ? Colors.white70 : Colors.black54),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isDark ? Colors.white : Colors.black87,
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+        ],
       ),
     );
   }

@@ -241,8 +241,6 @@ class GraphController extends ChangeNotifier {
     notifyListeners();
   }
 
-  String loadedGraphName = 'Personalizado';
-
   void removeAllNodesAndEdges() {
     _nodes.clear();
     _edges.clear();
@@ -258,7 +256,6 @@ class GraphController extends ChangeNotifier {
 
     switch (exampleType) {
       case 'chain':
-        loadedGraphName = 'Cadena básica';
         // Cadena básica: 5 nodes in a line
         final c1 = Song(id: 'chain_1', name: 'A');
         final c2 = Song(id: 'chain_2', name: 'B');
@@ -274,7 +271,6 @@ class GraphController extends ChangeNotifier {
         break;
 
       case 'cycle':
-        loadedGraphName = 'Ciclo simple';
         // Ciclo simple: 6 nodes in a ring
         final cy1 = Song(id: 'cycle_1', name: 'A');
         final cy2 = Song(id: 'cycle_2', name: 'B');

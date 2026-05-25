@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';
 import '../models/music_node.dart';
-import '../models/song.dart';
 import '../graph/graph_controller.dart';
 import 'node_widget.dart';
 
@@ -20,6 +19,8 @@ class GraphWidget extends StatefulWidget {
 }
 
 class _GraphWidgetState extends State<GraphWidget> {
+  // We instantiate the algorithm configuration.
+  // FruchtermanReingold is a force-directed layout which lets nodes auto-arrange.
   final FruchtermanReingoldAlgorithm _forceLayout = FruchtermanReingoldAlgorithm(
     FruchtermanReingoldConfiguration()
       ..iterations = 800
@@ -31,130 +32,77 @@ class _GraphWidgetState extends State<GraphWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
-
     if (widget.controller.nodes.isEmpty) {
-      return GestureDetector(
-        onLongPress: () {
-          _createNewNode(widget.controller);
-        },
-        child: Container(
-          color: Colors.transparent, // catch taps
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.gesture,
-                  size: 64,
-                  color: isDark ? Colors.white.withOpacity(0.3) : Colors.black.withOpacity(0.3),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'El lienzo está vacío.\nMantén presionado para crear un nodo.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: isDark ? Colors.white.withOpacity(0.5) : Colors.black.withOpacity(0.5),
-                    fontSize: 16,
-                  ),
-                ),
-              ],
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.music_off,
+              size: 64,
+              color: Colors.white.withOpacity(0.3),
             ),
-          ),
+            const SizedBox(height: 16),
+            Text(
+              'El grafo está vacío.\n¡Agrega nodos para comenzar!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.5),
+                fontSize: 16,
+              ),
+            ),
+          ],
         ),
       );
     }
 
+    // Dynamic edge styling based on algorithm execution state
     final Paint edgePaint = Paint()
-      ..color = const Color(0xFF3B82F6) 
-      ..strokeWidth = 2.5
+      ..color = widget.controller.isAlgorithmRunning
+          ? const Color(0xFFFF007F).withOpacity(0.3) // Scanning neon hot pink edge lines
+          : const Color(0xFF5A5E82).withOpacity(0.5) // Slate blue neon lines
+      ..strokeWidth = widget.controller.isAlgorithmRunning ? 2.5 : 1.5
       ..style = PaintingStyle.stroke;
 
     return InteractiveViewer(
       constrained: false,
-      boundaryMargin: const EdgeInsets.all(2000),
-      minScale: 0.1,
+      boundaryMargin: const EdgeInsets.all(500),
+      minScale: 0.05,
       maxScale: 4.0,
-      child: GestureDetector(
-        onLongPress: () {
-          _createNewNode(widget.controller);
-        },
-        child: CustomPaint(
-          painter: GridPainter(isDark),
-          child: Container(
-            width: 4000,
-            height: 4000,
-            color: Colors.transparent,
-            alignment: Alignment.center,
-            child: GraphView(
-              graph: widget.controller.graph,
-              algorithm: _forceLayout,
-              paint: edgePaint,
-              builder: (Node node) {
-                final musicNode = node.key!.value as MusicNode;
+      child: Container(
+        padding: const EdgeInsets.all(32),
+        child: GraphView(
+          graph: widget.controller.graph,
+          // ArrowEdgeRenderer displays elegant direction markers for directed paths!
+          algorithm: _forceLayout,
+          paint: edgePaint,
+          builder: (Node node) {
+            // Retrieve the original music node
+            final musicNode = node.key!.value as MusicNode;
 
-                final bool isActive = widget.controller.activeTraversalNode == musicNode;
-                final bool isVisited = widget.controller.visitedNodes.contains(musicNode);
-                final bool isInPath = widget.controller.shortestPathNodes.contains(musicNode);
+            final bool isActive = widget.controller.activeTraversalNode == musicNode;
+            final bool isVisited = widget.controller.visitedNodes.contains(musicNode);
+            final bool isInPath = widget.controller.shortestPathNodes.contains(musicNode);
 
-                return GestureDetector(
-                  onPanUpdate: (details) {
-                    setState(() {
-                      node.position += details.delta;
-                    });
-                  },
-                  child: NodeWidget(
-                    node: musicNode,
-                    isActive: isActive,
-                    isVisited: isVisited,
-                    isInPath: isInPath,
-                    onTap: () => widget.onNodeSelected(musicNode),
-                  ),
-                );
+            // Wrap with a GestureDetector to allow freeform dragging of individual nodes!
+            return GestureDetector(
+              onPanUpdate: (details) {
+                // Allows the user to freely drag nodes around the canvas
+                setState(() {
+                  node.position += details.delta;
+                });
               },
-            ),
-          ),
+              child: NodeWidget(
+                node: musicNode,
+                isActive: isActive,
+                isVisited: isVisited,
+                isInPath: isInPath,
+                onTap: () => widget.onNodeSelected(musicNode),
+              ),
+            );
+          },
         ),
       ),
     );
   }
-
-  void _createNewNode(GraphController controller) {
-    int count = controller.nodes.length;
-    String newName;
-    if (count < 26) {
-      newName = String.fromCharCode(65 + count);
-    } else {
-      newName = 'N${count + 1}';
-    }
-    
-    final newNode = Song(id: 'custom_$newName', name: newName);
-    controller.addMusicNode(newNode);
-  }
-}
-
-class GridPainter extends CustomPainter {
-  final bool isDark;
-  GridPainter(this.isDark);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = isDark ? Colors.white.withOpacity(0.04) : const Color(0xFF3B82F6).withOpacity(0.1) // Soft grid color
-      ..strokeWidth = 1.0;
-
-    const double step = 40.0;
-    
-    // Draw horizontal lines
-    for (double i = 0; i <= size.height; i += step) {
-      canvas.drawLine(Offset(0, i), Offset(size.width, i), paint);
-    }
-    // Draw vertical lines
-    for (double i = 0; i <= size.width; i += step) {
-      canvas.drawLine(Offset(i, 0), Offset(i, size.height), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => oldDelegate != this;
 }
