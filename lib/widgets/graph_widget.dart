@@ -1,0 +1,94 @@
+import 'package:flutter/material.dart';
+import 'package:graphview/GraphView.dart';
+import '../models/music_node.dart';
+import '../graph/graph_controller.dart';
+import 'node_widget.dart';
+
+class GraphWidget extends StatefulWidget {
+  final GraphController controller;
+  final Function(MusicNode) onNodeSelected;
+
+  const GraphWidget({
+    super.key,
+    required this.controller,
+    required this.onNodeSelected,
+  });
+
+  @override
+  State<GraphWidget> createState() => _GraphWidgetState();
+}
+
+class _GraphWidgetState extends State<GraphWidget> {
+  // We instantiate the algorithm configuration.
+  // FruchtermanReingold is a force-directed layout which lets nodes auto-arrange.
+  final FruchtermanReingoldAlgorithm _forceLayout = FruchtermanReingoldAlgorithm(
+    FruchtermanReingoldConfiguration(),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.controller.nodes.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.music_off,
+              size: 64,
+              color: Colors.white.withOpacity(0.3),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'El grafo está vacío.\n¡Agrega nodos para comenzar!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.5),
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Dynamic edge styling based on algorithm execution state
+    final Paint edgePaint = Paint()
+      ..color = widget.controller.isAlgorithmRunning
+          ? const Color(0xFFFF007F).withOpacity(0.3) // Scanning neon hot pink edge lines
+          : const Color(0xFF5A5E82).withOpacity(0.5) // Slate blue neon lines
+      ..strokeWidth = widget.controller.isAlgorithmRunning ? 2.5 : 1.5
+      ..style = PaintingStyle.stroke;
+
+    return InteractiveViewer(
+      constrained: false,
+      boundaryMargin: const EdgeInsets.all(500),
+      minScale: 0.05,
+      maxScale: 4.0,
+      child: Container(
+        padding: const EdgeInsets.all(32),
+        child: GraphView(
+          graph: widget.controller.graph,
+          // ArrowEdgeRenderer displays elegant direction markers for directed paths!
+          algorithm: _forceLayout,
+          paint: edgePaint,
+          builder: (Node node) {
+            // Retrieve the original music node
+            final musicNode = node.key!.value as MusicNode;
+
+            final bool isActive = widget.controller.activeTraversalNode == musicNode;
+            final bool isVisited = widget.controller.visitedNodes.contains(musicNode);
+            final bool isInPath = widget.controller.shortestPathNodes.contains(musicNode);
+
+            return NodeWidget(
+              node: musicNode,
+              isActive: isActive,
+              isVisited: isVisited,
+              isInPath: isInPath,
+              onTap: () => widget.onNodeSelected(musicNode),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
