@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';
+import 'dart:math' as math;
 import '../models/music_node.dart';
 import '../models/artist.dart';
 import '../models/song.dart';
@@ -22,8 +23,16 @@ class GraphController extends ChangeNotifier {
 
   bool _isDirected = false;
   bool _isDarkMode = true;
+  bool _manualLayout = false;
 
   bool get isDarkMode => _isDarkMode;
+
+  bool get manualLayout => _manualLayout;
+
+  void toggleManualLayout() {
+    _manualLayout = !_manualLayout;
+    notifyListeners();
+  }
 
   void toggleTheme() {
     _isDarkMode = !_isDarkMode;
@@ -66,7 +75,79 @@ class GraphController extends ChangeNotifier {
   void toggleGraphDirected() {
     _isDirected = !_isDirected;
     _rebuildGraphView();
+    // After rebuilding, if we just loaded an example (clearCurrent true),
+    // we want to apply a deterministic layout so the nodes appear ordered.
     notifyListeners();
+  }
+
+  void _applyExampleLayout(String exampleType) {
+    if (_nodes.isEmpty) return;
+
+    // Helper to set node position by musicNode
+    void setPos(MusicNode n, double x, double y) {
+      final gnode = getNodeForMusicNode(n);
+      gnode.position = Offset(x, y);
+    }
+
+    final int n = _nodes.length;
+
+    switch (exampleType) {
+      case 'chain':
+        final double spacing = 140.0;
+        final double startX = -((n - 1) / 2) * spacing;
+        for (int i = 0; i < n; i++) {
+          setPos(_nodes[i], startX + i * spacing, 0);
+        }
+        break;
+      case 'cycle':
+      case 'complete':
+        final double radius = 120.0 + (n - 5) * 10.0;
+        for (int i = 0; i < n; i++) {
+          final double angle = (2 * math.pi * i) / n;
+          setPos(_nodes[i], radius * math.cos(angle), radius * math.sin(angle));
+        }
+        break;
+      case 'star':
+        // center then leaves
+        if (n > 0) setPos(_nodes[0], 0, 0);
+        final double r = 140.0;
+        for (int i = 1; i < n; i++) {
+          final double angle = (2 * math.pi * (i - 1)) / (n - 1);
+          setPos(_nodes[i], r * math.cos(angle), r * math.sin(angle));
+        }
+        break;
+      case 'tree':
+        // Root at top, two children below, then four leaves
+        if (n >= 1) setPos(_nodes[0], 0, -140);
+        if (n >= 3) {
+          setPos(_nodes[1], -100, 0);
+          setPos(_nodes[2], 100, 0);
+        }
+        if (n >= 7) {
+          setPos(_nodes[3], -150, 120);
+          setPos(_nodes[4], -50, 120);
+          setPos(_nodes[5], 50, 120);
+          setPos(_nodes[6], 150, 120);
+        }
+        break;
+      case 'disconnected':
+        // First group on left, second on right
+        final double leftX = -140.0;
+        final double rightX = 140.0;
+        int mid = (n / 2).ceil();
+        for (int i = 0; i < n; i++) {
+          final double x = i < mid ? leftX - (i * 60) : rightX + ((i - mid) * 60);
+          setPos(_nodes[i], x, 0);
+        }
+        break;
+      default:
+        // Simple horizontal layout as fallback
+        final double sp = 120.0;
+        final double sX = -((n - 1) / 2) * sp;
+        for (int i = 0; i < n; i++) {
+          setPos(_nodes[i], sX + i * sp, 0);
+        }
+    }
   }
 
   void _loadDefaultData() {
@@ -588,5 +669,32 @@ class GraphController extends ChangeNotifier {
     } else {
       return (2 * e) / possibleEdges;
     }
+  }
+
+  /// Copy node positions from another GraphController's internal Node objects.
+  /// Matches nodes by their `id` and transfers the `position` so layouts
+  /// created in a sandbox can be applied to the main canvas.
+  void applyNodePositionsFrom(GraphController other) {
+    for (final entry in other._nodeMap.entries) {
+      final MusicNode otherMusic = entry.key;
+      final Node otherNode = entry.value;
+      final Offset? otherPos = otherNode.position;
+      if (otherPos == null) continue;
+
+      // Find matching MusicNode in this controller by id
+      Node? targetNode;
+      for (final e in _nodeMap.entries) {
+        if (e.key.id == otherMusic.id) {
+          targetNode = e.value;
+          break;
+        }
+      }
+
+      if (targetNode != null) {
+        targetNode.position = otherPos;
+      }
+    }
+    // After copying positions, notify listeners so the UI updates.
+    notifyListeners();
   }
 }

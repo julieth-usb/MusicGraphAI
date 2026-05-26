@@ -31,82 +31,6 @@ class _HomeScreenState extends State<HomeScreen> {
   // Track currently selected node in UI for details card
   MusicNode? _inspectingNode;
 
-  @override
-  void dispose() {
-    _nodeNameController.dispose();
-    super.dispose();
-  }
-
-  // Pre-fill fields when a node is clicked in the graph
-  void _handleNodeSelected(MusicNode node) {
-    setState(() {
-      _inspectingNode = node;
-    });
-
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Detalles de: "${node.name}" (${node.typeString})',
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: node.color.withOpacity(0.9),
-        duration: const Duration(milliseconds: 1500),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-
-  // Visual helper to establish relationships
-  void _addConnection(BuildContext context, GraphController controller) {
-    if (_connectionSource == null || _connectionTarget == null) {
-      _showWarningSnackBar('Selecciona el nodo de origen y destino.');
-      return;
-    }
-    controller.addConnection(_connectionSource!, _connectionTarget!);
-    Navigator.pop(context); // close bottom sheet
-    _showSuccessSnackBar('Conexión establecida: ${_connectionSource!.name} ↔ ${_connectionTarget!.name}');
-  }
-
-  // Form submission to add custom node
-  void _addCustomNode(BuildContext context, GraphController controller) {
-    final name = _nodeNameController.text.trim();
-    if (name.isEmpty) {
-      _showWarningSnackBar('Por favor, introduce un nombre.');
-      return;
-    }
-
-    final String cleanId = name.toLowerCase().replaceAll(' ', '_');
-    MusicNode newNode;
-
-    switch (_selectedNodeType) {
-      case NodeType.artist:
-        newNode = Artist(id: cleanId, name: name);
-        break;
-      case NodeType.song:
-        newNode = Song(id: cleanId, name: name);
-        break;
-      case NodeType.genre:
-        newNode = Genre(id: cleanId, name: name);
-        break;
-    }
-
-    controller.addMusicNode(newNode);
-    _nodeNameController.clear();
-    Navigator.pop(context); // close bottom sheet
-
-    final bool isDark = controller.isDarkMode;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Nodo "${newNode.name}" creado con éxito.'),
-        backgroundColor: newNode.getColor(isDark),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-
   void _showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -127,6 +51,57 @@ class _HomeScreenState extends State<HomeScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
+  }
+
+  // Add a new custom node based on the modal inputs
+  void _addCustomNode(BuildContext context, GraphController controller) {
+    final name = _nodeNameController.text.trim();
+    if (name.isEmpty) {
+      _showWarningSnackBar('El nombre del nodo no puede estar vacío.');
+      return;
+    }
+
+    final slug = name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_') + '_${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}';
+    late MusicNode newNode;
+    switch (_selectedNodeType) {
+      case NodeType.artist:
+        newNode = Artist(id: slug, name: name);
+        break;
+      case NodeType.song:
+        newNode = Song(id: slug, name: name);
+        break;
+      case NodeType.genre:
+        newNode = Genre(id: slug, name: name);
+        break;
+    }
+
+    controller.addMusicNode(newNode);
+    _nodeNameController.clear();
+    Navigator.of(context).pop();
+    _showSuccessSnackBar('Nodo "${newNode.name}" creado con éxito.');
+  }
+
+  // Create a connection between two selected nodes
+  void _addConnection(BuildContext context, GraphController controller) {
+    if (_connectionSource == null || _connectionTarget == null) {
+      _showWarningSnackBar('Selecciona ambos nodos para conectar.');
+      return;
+    }
+    if (_connectionSource == _connectionTarget) {
+      _showWarningSnackBar('No puedes conectar un nodo consigo mismo.');
+      return;
+    }
+
+    controller.addConnection(_connectionSource!, _connectionTarget!);
+    Navigator.of(context).pop();
+    _showSuccessSnackBar('Nodos conectados correctamente.');
+  }
+
+  // Handle node selection from the canvas
+  void _handleNodeSelected(MusicNode node) {
+    setState(() {
+      _inspectingNode = node;
+    });
   }
 
   // --- Bottom Sheet Launchers ---
@@ -325,6 +300,58 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         ),
+                        const SizedBox(height: 12),
+                        // Songs quick-list that reacts to traversal (BFS/DFS)
+                        if (controller.nodes.any((n) => n.type == NodeType.song))
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Canciones',
+                                style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 8),
+                              SizedBox(
+                                height: 72,
+                                child: ListView(
+                                  scrollDirection: Axis.horizontal,
+                                  padding: const EdgeInsets.only(bottom: 6),
+                                  children: controller.nodes.where((n) => n.type == NodeType.song).map((songNode) {
+                                    final bool isActive = controller.activeTraversalNode == songNode;
+                                    final bool isVisited = controller.visitedNodes.contains(songNode);
+                                    final bool isInPath = controller.shortestPathNodes.contains(songNode);
+                                    return AnimatedContainer(
+                                      duration: const Duration(milliseconds: 300),
+                                      margin: const EdgeInsets.only(right: 10),
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: isActive
+                                            ? (isDark ? const Color(0xFFFF007F).withOpacity(0.18) : const Color(0xFF7B1FA2).withOpacity(0.12))
+                                            : (isVisited ? songNode.getColor(isDark).withOpacity(0.12) : (isDark ? const Color(0xFF0C0F19) : const Color(0xFFE8EDF5))),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: songNode.getColor(isDark).withOpacity(isInPath ? 1.0 : 0.18), width: isInPath ? 2.0 : 1.0),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(songNode.icon, color: songNode.getColor(isDark)),
+                                          const SizedBox(width: 8),
+                                          Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Text(songNode.name, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
+                                              Text(songNode.subtitle ?? songNode.typeString, style: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 11)),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   ),
@@ -564,24 +591,28 @@ class _HomeScreenState extends State<HomeScreen> {
                               defaultColumnWidth: const FixedColumnWidth(34),
                               border: TableBorder.all(color: Colors.grey.withOpacity(0.1)),
                               children: [
-                                // Header abbreviations row
+                                // Header abbreviations row (highlights visited/active nodes)
                                 TableRow(
                                   children: [
                                     const TableCell(
                                       child: Center(
-                                        child: Text(
-                                          'M',
-                                          style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 10),
-                                        ),
+                                        child: Text('M', style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 10)),
                                       ),
                                     ),
                                     ...List.generate(matrixData.labels.length, (index) {
                                       final label = matrixData.labels[index];
+                                      final headerNode = controller.nodes[index];
+                                      final bool isVisited = controller.visitedNodes.contains(headerNode);
+                                      final bool isActive = controller.activeTraversalNode == headerNode;
+                                      final Color labelColor = isActive
+                                          ? (isDark ? const Color(0xFFFF007F) : const Color(0xFF7B1FA2))
+                                          : (isVisited ? headerNode.getColor(isDark) : headerNode.getColor(isDark).withOpacity(0.9));
                                       return TableCell(
                                         child: Center(
-                                          child: Text(
-                                            label.substring(0, label.length > 2 ? 2 : label.length),
-                                            style: TextStyle(color: controller.nodes[index].getColor(isDark), fontWeight: FontWeight.bold, fontSize: 9),
+                                          child: AnimatedDefaultTextStyle(
+                                            duration: const Duration(milliseconds: 200),
+                                            style: TextStyle(color: labelColor, fontWeight: FontWeight.bold, fontSize: 9),
+                                            child: Text(label.substring(0, label.length > 2 ? 2 : label.length)),
                                           ),
                                         ),
                                       );
@@ -592,33 +623,55 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ...List.generate(matrixData.matrix.length, (rowIndex) {
                                   final rowLabel = matrixData.labels[rowIndex];
                                   final rowNode = controller.nodes[rowIndex];
+                                  final bool rowVisited = controller.visitedNodes.contains(rowNode);
+                                  final bool rowActive = controller.activeTraversalNode == rowNode;
                                   return TableRow(
                                     children: [
                                       TableCell(
                                         child: Center(
-                                          child: Text(
-                                            rowLabel.substring(0, rowLabel.length > 2 ? 2 : rowLabel.length),
+                                          child: AnimatedDefaultTextStyle(
+                                            duration: const Duration(milliseconds: 200),
                                             style: TextStyle(color: rowNode.getColor(isDark), fontWeight: FontWeight.bold, fontSize: 9),
+                                            child: Text(rowLabel.substring(0, rowLabel.length > 2 ? 2 : rowLabel.length)),
                                           ),
                                         ),
                                       ),
                                       ...List.generate(matrixData.matrix[rowIndex].length, (colIndex) {
                                         final cellValue = matrixData.matrix[rowIndex][colIndex];
-                                        final bool isActiveCell = cellValue == 1;
+                                        final bool isEdge = cellValue == 1;
+                                        final colNode = controller.nodes[colIndex];
+                                        final bool colVisited = controller.visitedNodes.contains(colNode);
+                                        final bool colActive = controller.activeTraversalNode == colNode;
+
+                                        // Highlight cell when either row or column is visited/active
+                                        Color? bg;
+                                        if (rowActive || colActive) {
+                                          bg = (isDark ? const Color(0xFFFF007F) : const Color(0xFF7B1FA2)).withOpacity(0.12);
+                                        } else if (rowVisited || colVisited) {
+                                          bg = rowNode.getColor(isDark).withOpacity(0.08);
+                                        } else if (isEdge) {
+                                          bg = const Color(0xFF00FF87).withOpacity(0.12);
+                                        }
+
+                                        Color textColor;
+                                        if (rowActive || colActive) {
+                                          textColor = isDark ? const Color(0xFFFF007F) : const Color(0xFF7B1FA2);
+                                        } else if (isEdge) {
+                                          textColor = isDark ? const Color(0xFF00FF87) : const Color(0xFF2E7D32);
+                                        } else {
+                                          textColor = isDark ? Colors.white24 : Colors.black26;
+                                        }
+
                                         return TableCell(
                                           child: Container(
                                             height: 24,
-                                            color: isActiveCell
-                                                ? const Color(0xFF00FF87).withOpacity(0.12)
-                                                : Colors.transparent,
+                                            color: bg ?? Colors.transparent,
                                             child: Center(
                                               child: Text(
                                                 '$cellValue',
                                                 style: TextStyle(
-                                                  color: isActiveCell
-                                                      ? const Color(0xFF00FF87)
-                                                      : (isDark ? Colors.white24 : Colors.black26),
-                                                  fontWeight: isActiveCell ? FontWeight.bold : FontWeight.normal,
+                                                  color: textColor,
+                                                  fontWeight: isEdge ? FontWeight.bold : FontWeight.normal,
                                                   fontSize: 10.5,
                                                 ),
                                               ),
@@ -1194,14 +1247,13 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: primaryColor.withOpacity(0.1), width: 1),
       ),
-      child: Material(
+          child: Material(
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () {
             // Dismiss the theory sheet first so sandbox displays clean
             Navigator.pop(context);
-            
             // Show scale-animated sandbox dialog for safe interactive previewing
             showGeneralDialog(
               context: context,
@@ -1396,6 +1448,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: GraphWidget(
                 controller: controller,
                 onNodeSelected: _handleNodeSelected,
+                autoLayout: !controller.manualLayout,
               ),
             ),
 
@@ -1515,6 +1568,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           tooltip: controller.isDirected ? 'Grafo Dirigido' : 'Grafo No Dirigido',
                           onPressed: () {
                             controller.toggleGraphDirected();
+                          },
+                        ),
+                        // Manual layout toggle: when enabled user moves nodes freely
+                        IconButton(
+                          icon: Icon(
+                            Icons.pan_tool,
+                            color: controller.manualLayout ? (isDark ? const Color(0xFF00E5FF) : const Color(0xFF0288D1)) : Colors.grey,
+                          ),
+                          tooltip: controller.manualLayout ? 'Modo Manual: activo' : 'Modo Manual: inactivo',
+                          onPressed: () {
+                            controller.toggleManualLayout();
                           },
                         ),
                       ],

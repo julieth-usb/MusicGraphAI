@@ -7,11 +7,13 @@ import 'node_widget.dart';
 class GraphWidget extends StatefulWidget {
   final GraphController controller;
   final Function(MusicNode) onNodeSelected;
+  final bool autoLayout;
 
   const GraphWidget({
     super.key,
     required this.controller,
     required this.onNodeSelected,
+    this.autoLayout = true,
   });
 
   @override
@@ -64,6 +66,13 @@ class _GraphWidgetState extends State<GraphWidget> {
       ..strokeWidth = widget.controller.isAlgorithmRunning ? 2.5 : 1.5
       ..style = PaintingStyle.stroke;
 
+    // Choose algorithm based on widget.autoLayout. If disabled, use 0 iterations
+    // to avoid reflowing nodes so user can move them manually.
+    final algorithm = widget.autoLayout
+        ? _forceLayout
+        : FruchtermanReingoldAlgorithm(
+            FruchtermanReingoldConfiguration()..iterations = 0);
+
     return InteractiveViewer(
       constrained: false,
       boundaryMargin: const EdgeInsets.all(500),
@@ -74,7 +83,7 @@ class _GraphWidgetState extends State<GraphWidget> {
         child: GraphView(
           graph: widget.controller.graph,
           // ArrowEdgeRenderer displays elegant direction markers for directed paths!
-          algorithm: _forceLayout,
+          algorithm: algorithm,
           paint: edgePaint,
           builder: (Node node) {
             // Retrieve the original music node
