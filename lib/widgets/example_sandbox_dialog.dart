@@ -100,7 +100,6 @@ class _ExampleSandboxDialogState extends State<ExampleSandboxDialog> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     Expanded(
                                       child: Text(
