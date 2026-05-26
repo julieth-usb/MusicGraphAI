@@ -95,7 +95,7 @@ class _ExampleSandboxDialogState extends State<ExampleSandboxDialog> {
                             child: Icon(widget.icon, color: accentColor, size: 24),
                           ),
                           const SizedBox(width: 12),
-                          Expanded(
+                          Flexible(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
