@@ -31,6 +31,7 @@ class _ExampleSandboxDialogState extends State<ExampleSandboxDialog> {
     _sandboxController = GraphController();
     // Load the example into this local sandbox
     _sandboxController.loadExampleGraph(widget.exampleType, clearCurrent: true);
+    // No autoplay: user will control algorithms manually from the sandbox UI.
   }
 
   @override
@@ -173,6 +174,7 @@ class _ExampleSandboxDialogState extends State<ExampleSandboxDialog> {
                               ),
                             );
                           },
+                          autoLayout: false,
                         ),
                       ),
                     ),
@@ -263,7 +265,14 @@ class _ExampleSandboxDialogState extends State<ExampleSandboxDialog> {
                                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                               ),
                               onPressed: () {
+                                widget.mainController.stopAnimation();
                                 widget.mainController.loadExampleGraph(widget.exampleType, clearCurrent: true);
+                                // Ensure main canvas stays in manual mode so applied positions persist
+                                if (!widget.mainController.manualLayout) {
+                                  widget.mainController.toggleManualLayout();
+                                }
+                                // Apply the exact node positions created inside the sandbox
+                                widget.mainController.applyNodePositionsFrom(_sandboxController);
                                 Navigator.pop(context); // Close sandbox
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
@@ -276,35 +285,7 @@ class _ExampleSandboxDialogState extends State<ExampleSandboxDialog> {
                               },
                             ),
                           ),
-                          const SizedBox(width: 10),
-                          // MERGE WITHOUT LOSING MAIN CANVAS
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: accentColor,
-                                side: BorderSide(color: accentColor, width: 1.5),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                              ),
-                              icon: const Icon(Icons.merge_type, size: 18),
-                              label: const Text(
-                                'Fusionar con el mío',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                              ),
-                              onPressed: () {
-                                widget.mainController.loadExampleGraph(widget.exampleType, clearCurrent: false);
-                                Navigator.pop(context); // Close sandbox
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Topología "${widget.title}" integrada en tu lienzo actual'),
-                                    backgroundColor: Colors.green,
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
+                          // (Merge option removed — use 'Cargar en Lienzo' to overwrite)
                         ],
                       ),
                     ),
