@@ -1437,6 +1437,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final controller = Provider.of<GraphController>(context);
     final bool isDark = controller.isDarkMode;
+    final bool isCompactScreen = MediaQuery.of(context).size.width < _compactHeaderBreakpoint;
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0A0D14) : const Color(0xFFF3F5F9),
@@ -1637,7 +1638,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             // 3. Ambient Help Overlay (glowing prompt guide)
             Positioned(
-              top: 76,
+              top: isCompactScreen ? 118 : 76,
               left: 12,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
