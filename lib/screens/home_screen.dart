@@ -17,9 +17,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const double _compactHeaderBreakpoint = 520.0;
+
   // Form input controllers
   final _nodeNameController = TextEditingController();
   NodeType _selectedNodeType = NodeType.artist;
+
+  final ScrollController _headerActionsScrollController = ScrollController();
 
   // Node selection for connections and algorithms
   MusicNode? _connectionSource;
@@ -51,6 +55,13 @@ class _HomeScreenState extends State<HomeScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _nodeNameController.dispose();
+    _headerActionsScrollController.dispose();
+    super.dispose();
   }
 
   // Add a new custom node based on the modal inputs
@@ -1475,7 +1486,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final bool isCompact = constraints.maxWidth < 520;
+                    final bool isCompact = constraints.maxWidth < _compactHeaderBreakpoint;
                     final Widget titleRow = Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -1492,100 +1503,108 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     );
-                    final Widget actionsRow = SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                        // Dynamic Switch Mode Button (☀️/🌙)
-                        IconButton(
-                          icon: Icon(
-                            isDark ? Icons.light_mode : Icons.dark_mode,
-                            color: isDark ? Colors.amberAccent : const Color(0xFF7B1FA2),
-                          ),
-                          tooltip: 'Cambiar Modo de Color',
-                          onPressed: () {
-                            controller.toggleTheme();
-                          },
-                        ),
-                        // Theory button (moved next to mode switch!)
-                        IconButton(
-                          icon: Icon(
-                            Icons.school,
-                            color: isDark ? const Color(0xFFFFD700) : const Color(0xFFE65100),
-                          ),
-                          tooltip: 'Teoría y Ejemplos',
-                          onPressed: () => _openTheorySheet(context, controller),
-                        ),
-                        const SizedBox(width: 6),
-                        // Refresh Preloaded Button
-                        IconButton(
-                          icon: const Icon(Icons.refresh, color: Color(0xFF00FF87)),
-                          tooltip: 'Datos Iniciales',
-                          onPressed: () {
-                            controller.resetGraph();
-                            setState(() {
-                              _connectionSource = null;
-                              _connectionTarget = null;
-                              _algoStart = null;
-                              _algoTarget = null;
-                              _inspectingNode = null;
-                            });
-                          },
-                        ),
-                        // Clear canvas button
-                        IconButton(
-                          icon: const Icon(Icons.delete_sweep, color: Colors.redAccent),
-                          tooltip: 'Limpiar Lienzo',
-                          onPressed: () {
-                            controller.clearGraph();
-                            setState(() {
-                              _connectionSource = null;
-                              _connectionTarget = null;
-                              _algoStart = null;
-                              _algoTarget = null;
-                              _inspectingNode = null;
-                            });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: const Row(
-                                  children: [
-                                    Icon(Icons.delete_sweep, color: Colors.white, size: 20),
-                                    const SizedBox(width: 8),
-                                    Text('Lienzo limpiado por completo'),
-                                  ],
-                                ),
-                                backgroundColor: Colors.redAccent,
-                                duration: const Duration(seconds: 2),
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    final Widget actionsRow = Scrollbar(
+                      controller: _headerActionsScrollController,
+                      thumbVisibility: isCompact,
+                      child: SingleChildScrollView(
+                        controller: _headerActionsScrollController,
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Dynamic Switch Mode Button (☀️/🌙)
+                            IconButton(
+                              icon: Icon(
+                                isDark ? Icons.light_mode : Icons.dark_mode,
+                                color: isDark ? Colors.amberAccent : const Color(0xFF7B1FA2),
                               ),
-                            );
-                          },
+                              tooltip: 'Cambiar Modo de Color',
+                              onPressed: () {
+                                controller.toggleTheme();
+                              },
+                            ),
+                            // Theory button (moved next to mode switch!)
+                            IconButton(
+                              icon: Icon(
+                                Icons.school,
+                                color: isDark ? const Color(0xFFFFD700) : const Color(0xFFE65100),
+                              ),
+                              tooltip: 'Teoría y Ejemplos',
+                              onPressed: () => _openTheorySheet(context, controller),
+                            ),
+                            const SizedBox(width: 6),
+                            // Refresh Preloaded Button
+                            IconButton(
+                              icon: const Icon(Icons.refresh, color: Color(0xFF00FF87)),
+                              tooltip: 'Datos Iniciales',
+                              onPressed: () {
+                                controller.resetGraph();
+                                setState(() {
+                                  _connectionSource = null;
+                                  _connectionTarget = null;
+                                  _algoStart = null;
+                                  _algoTarget = null;
+                                  _inspectingNode = null;
+                                });
+                              },
+                            ),
+                            // Clear canvas button
+                            IconButton(
+                              icon: const Icon(Icons.delete_sweep, color: Colors.redAccent),
+                              tooltip: 'Limpiar Lienzo',
+                              onPressed: () {
+                                controller.clearGraph();
+                                setState(() {
+                                  _connectionSource = null;
+                                  _connectionTarget = null;
+                                  _algoStart = null;
+                                  _algoTarget = null;
+                                  _inspectingNode = null;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Row(
+                                      children: [
+                                        Icon(Icons.delete_sweep, color: Colors.white, size: 20),
+                                        const SizedBox(width: 8),
+                                        Text('Lienzo limpiado por completo'),
+                                      ],
+                                    ),
+                                    backgroundColor: Colors.redAccent,
+                                    duration: const Duration(seconds: 2),
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                );
+                              },
+                            ),
+                            // Direct Config Toggle: Grafo Dirigido
+                            IconButton(
+                              icon: Icon(
+                                controller.isDirected ? Icons.arrow_right_alt : Icons.swap_horiz,
+                                color: controller.isDirected ? Colors.pinkAccent : Colors.grey,
+                              ),
+                              tooltip: controller.isDirected ? 'Grafo Dirigido' : 'Grafo No Dirigido',
+                              onPressed: () {
+                                controller.toggleGraphDirected();
+                              },
+                            ),
+                            // Manual layout toggle: when enabled user moves nodes freely
+                            IconButton(
+                              icon: Icon(
+                                Icons.pan_tool,
+                                color: controller.manualLayout
+                                    ? (isDark ? const Color(0xFF00E5FF) : const Color(0xFF0288D1))
+                                    : Colors.grey,
+                              ),
+                              tooltip: controller.manualLayout ? 'Modo Manual: activo' : 'Modo Manual: inactivo',
+                              onPressed: () {
+                                controller.toggleManualLayout();
+                              },
+                            ),
+                          ],
                         ),
-                        // Direct Config Toggle: Grafo Dirigido
-                        IconButton(
-                          icon: Icon(
-                            controller.isDirected ? Icons.arrow_right_alt : Icons.swap_horiz,
-                            color: controller.isDirected ? Colors.pinkAccent : Colors.grey,
-                          ),
-                          tooltip: controller.isDirected ? 'Grafo Dirigido' : 'Grafo No Dirigido',
-                          onPressed: () {
-                            controller.toggleGraphDirected();
-                          },
-                        ),
-                        // Manual layout toggle: when enabled user moves nodes freely
-                        IconButton(
-                          icon: Icon(
-                            Icons.pan_tool,
-                            color: controller.manualLayout ? (isDark ? const Color(0xFF00E5FF) : const Color(0xFF0288D1)) : Colors.grey,
-                          ),
-                          tooltip: controller.manualLayout ? 'Modo Manual: activo' : 'Modo Manual: inactivo',
-                          onPressed: () {
-                            controller.toggleManualLayout();
-                          },
-                        ),
-                      ],
+                      ),
                     );
 
                     if (isCompact) {
