@@ -775,9 +775,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         indicatorColor: accentColor,
                         labelColor: isDark ? Colors.white : Colors.black87,
                         unselectedLabelColor: Colors.grey,
-                        labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: isCompact ? 10 : 11),
+                        labelStyle: isCompact
+                            ? const TextStyle(fontWeight: FontWeight.bold, fontSize: 10)
+                            : const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
                         isScrollable: isCompact,
-                        labelPadding: EdgeInsets.symmetric(horizontal: isCompact ? 6 : 12),
+                        labelPadding: isCompact
+                            ? const EdgeInsets.symmetric(horizontal: 6)
+                            : const EdgeInsets.symmetric(horizontal: 12),
                         tabs: const [
                           Tab(text: '⚡ Algor.', icon: Icon(Icons.bolt, size: 16)),
                           Tab(text: '📊 Estruct.', icon: Icon(Icons.hub, size: 16)),
