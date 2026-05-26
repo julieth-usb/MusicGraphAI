@@ -1,6 +1,6 @@
 {
-    "name": "music_graph_ai",
-    "short_name": "music_graph_ai",
+    "name": "MusicGraph AI",
+    "short_name": "MusicGraph AI",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
