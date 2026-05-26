@@ -1473,10 +1473,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     )
                   ],
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final bool isCompact = constraints.maxWidth < 520;
+                    final Widget titleRow = Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.hub, color: isDark ? const Color(0xFF00E5FF) : const Color(0xFF0288D1), size: 24),
                         const SizedBox(width: 10),
@@ -1490,9 +1491,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ],
-                    ),
-                    Row(
-                      children: [
+                    );
+                    final Widget actionsRow = SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                         // Dynamic Switch Mode Button (☀️/🌙)
                         IconButton(
                           icon: Icon(
@@ -1582,8 +1586,32 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                         ),
                       ],
-                    ),
-                  ],
+                    );
+
+                    if (isCompact) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          titleRow,
+                          const SizedBox(height: 6),
+                          Align(alignment: Alignment.centerLeft, child: actionsRow),
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        titleRow,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: actionsRow,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
