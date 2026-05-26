@@ -1437,7 +1437,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final controller = Provider.of<GraphController>(context);
     final bool isDark = controller.isDarkMode;
-    final bool isCompactScreen = MediaQuery.of(context).size.width < _compactHeaderBreakpoint;
+    final bool isCompactScreen = MediaQuery.sizeOf(context).width < _compactHeaderBreakpoint;
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0A0D14) : const Color(0xFFF3F5F9),
