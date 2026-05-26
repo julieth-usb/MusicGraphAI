@@ -517,6 +517,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) {
+        final isCompact = MediaQuery.of(context).size.width < 380;
         return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -774,7 +775,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         indicatorColor: accentColor,
                         labelColor: isDark ? Colors.white : Colors.black87,
                         unselectedLabelColor: Colors.grey,
-                        labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+                        labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: isCompact ? 10 : 11),
+                        isScrollable: isCompact,
+                        labelPadding: EdgeInsets.symmetric(horizontal: isCompact ? 6 : 12),
                         tabs: const [
                           Tab(text: '⚡ Algor.', icon: Icon(Icons.bolt, size: 16)),
                           Tab(text: '📊 Estruct.', icon: Icon(Icons.hub, size: 16)),

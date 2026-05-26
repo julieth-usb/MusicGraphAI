@@ -100,14 +100,18 @@ class _ExampleSandboxDialogState extends State<ExampleSandboxDialog> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    Text(
-                                      '🔬 Laboratorio: ${widget.title}',
-                                      style: TextStyle(
-                                        color: textColor,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 0.5,
+                                    Expanded(
+                                      child: Text(
+                                        '🔬 Laboratorio: ${widget.title}',
+                                        style: TextStyle(
+                                          color: textColor,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 0.5,
+                                        ),
+                                        softWrap: true,
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -182,8 +186,10 @@ class _ExampleSandboxDialogState extends State<ExampleSandboxDialog> {
                     // --- Sandbox Algorithm Controls ---
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
                           _buildSandboxAlgoButton(
                             label: 'BFS (Anchura)',
@@ -196,7 +202,6 @@ class _ExampleSandboxDialogState extends State<ExampleSandboxDialog> {
                               }
                             },
                           ),
-                          const SizedBox(width: 8),
                           _buildSandboxAlgoButton(
                             label: 'DFS (Profundidad)',
                             icon: Icons.route,
@@ -208,7 +213,6 @@ class _ExampleSandboxDialogState extends State<ExampleSandboxDialog> {
                               }
                             },
                           ),
-                          const SizedBox(width: 8),
                           _buildSandboxAlgoButton(
                             label: 'Reiniciar',
                             icon: Icons.restart_alt,
